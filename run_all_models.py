@@ -222,14 +222,16 @@ def main():
     parser.add_argument("--models", type=str, default=None,
                          help="Lista de modelos separados por coma (ej. 'llama3.1:8b,phi4:14b'). "
                               "Default: los 5 modelos del paper original.")
-    parser.add_argument("--temperature", type=float, default=None)
+    parser.add_argument("--temperatures", type=str, default=None,
+                        help="Temperaturas separadas por coma (ej. '0.2,0.4,0.6').")
     parser.add_argument("--reps", type=int, default=10)
     args = parser.parse_args()
 
     cfg = load_config("config.yaml")
     sem_categories = load_semantic_categories(CATEGORIES_FILE)
     sim_cfg = cfg.get("simulation", {})
-    temperature = args.temperature if args.temperature is not None else sim_cfg.get("ollama_temperature", 0.4)
+    temperatures = ([float(t) for t in args.temperatures.split(",")]
+                    if args.temperatures else [sim_cfg.get("ollama_temperature", 0.4)])
     models = ([m.strip() for m in args.models.split(",") if m.strip()]
           if args.models else DEFAULT_MODELS)
     num_scenarios = sim_cfg.get("num_scenarios", 25)
@@ -239,30 +241,31 @@ def main():
     validate_config_bounds_sanity(cfg.get("task_generation", {}))
     total_run = total_skipped = total_ok = total_failed = 0
 
-    for rep in range(1, args.reps + 1):
-        for strategy in STRATEGIES:
-            for model in models:
-                print(f"\n{'#' * 70}\n REP {rep} | {strategy} | {model} | temp={temperature}\n{'#' * 70}")
+    for temperature in temperatures:
+        for rep in range(1, args.reps + 1):
+            for strategy in STRATEGIES:
+                for model in models:
+                    print(f"\n{'#' * 70}\n REP {rep} | {strategy} | {model} | temp={temperature}\n{'#' * 70}")
 
-                for idx in range(1, num_scenarios + 1):
-                    scenario_dir = build_scenario_dir(model, strategy, temperature, rep, idx)
-                    if scenario_already_complete(scenario_dir, tasks_k):
-                        total_skipped += 1
-                        print(f"  [SKIP] {scenario_dir}: already complete, skipping.")
-                        continue
+                    for idx in range(1, num_scenarios + 1):
+                        scenario_dir = build_scenario_dir(model, strategy, temperature, rep, idx)
+                        if scenario_already_complete(scenario_dir, tasks_k):
+                            total_skipped += 1
+                            print(f"  [SKIP] {scenario_dir}: already complete, skipping.")
+                            continue
 
-                    current_seed = base_seed + idx if base_seed is not None else None
-                    total_run += 1
-                    print(f"\n  [RUN] {scenario_dir} (seed={current_seed})...")
-                    try:
-                        run_single_scenario(model, idx, cfg, sem_categories, current_seed,
-                                            strategy, temperature, rep)
-                        total_ok += 1
-                        print(f"  [OK]  {scenario_dir} completado.")
-                    except Exception as e:
-                        total_failed += 1
-                        print(f"  [FAIL] {scenario_dir}: {e}")
-                        continue
+                        current_seed = base_seed + idx if base_seed is not None else None
+                        total_run += 1
+                        print(f"\n  [RUN] {scenario_dir} (seed={current_seed})...")
+                        try:
+                            run_single_scenario(model, idx, cfg, sem_categories, current_seed,
+                                                strategy, temperature, rep)
+                            total_ok += 1
+                            print(f"  [OK]  {scenario_dir} completado.")
+                        except Exception as e:
+                            total_failed += 1
+                            print(f"  [FAIL] {scenario_dir}: {e}")
+                            continue
     ## TODO: Translate
     print("\n" + "=" * 70)
     print(" RESUMEN")

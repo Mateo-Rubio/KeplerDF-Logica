@@ -8,9 +8,10 @@ import yaml
 import base64
 import getpass
 import os
+import random
 
 ## TODO translate pls
-INTERVALO_S = 120
+INTERVALO_S = 300
 DATOS = pathlib.Path("../KeplerDF-Datos")
 MAQUINA = f"maquina_{input('Letra de la máquina (escribe solo la letra, ej. a): ').strip().lower()}"
 
@@ -60,7 +61,10 @@ while True:
         subprocess.run(["git", "add", *map(str, destinos[i:i + 100])], cwd=DATOS)
     if subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=DATOS).returncode:
         subprocess.run(["git", "-c", f"user.name={MAQUINA}", "-c", f"user.email={MAQUINA}@keplerdf.local", "commit", "-m", f"{MAQUINA}: {len(nuevos)} escenarios completos"], cwd=DATOS)
-    subprocess.run(["git", "pull", "--rebase"], cwd=DATOS, env=GIT_ENV)
-    subprocess.run(["git", "push", "origin", "HEAD"], cwd=DATOS, env=GIT_ENV)
+    for _ in range(10):
+        subprocess.run(["git", "pull", "--rebase"], cwd=DATOS, env=GIT_ENV)
+        if subprocess.run(["git", "push", "origin", "HEAD"], cwd=DATOS, env=GIT_ENV).returncode == 0:
+            break
+        time.sleep(random.uniform(1, 10))
     hechos.update(nuevos)
-    time.sleep(INTERVALO_S)
+    time.sleep(INTERVALO_S + random.uniform(0, 120))
