@@ -87,8 +87,6 @@ def scenario_already_complete(scenario_dir: pathlib.Path, expected_tasks: int) -
     try:
         with (scenario_dir / "ollama_prompts_combined.json").open("r", encoding="utf-8") as f:
             total = json.load(f).get("scenario_metrics", {}).get("total_tasks_evaluated", 0)
-        with (scenario_dir / "physics_passes_report.json").open("r", encoding="utf-8") as f:
-            json.load(f)
         return total >= expected_tasks
     except (json.JSONDecodeError, OSError):
         return False
@@ -187,18 +185,18 @@ def run_single_scenario(model: str, idx: int, cfg: dict,
             strategy=strategy,
         )
 
-    physics_report_path = scenario_dir / "physics_passes_report.json"
-    physics_engine_main(
-        context=context,
-        bands_config=pay_cfg.get("bands_config", {}),
-        sensor_constraints=pay_cfg.get("sensor_constraints", {}),
-        simulation_start_utc=t0,
-        simulation_end_utc=tf,
-        output_path=str(physics_report_path),
-        step_seconds=20,
-        min_duration=collector_kwargs["min_duration"],
-        max_duration=collector_kwargs["max_duration"],
-    )
+    # physics_report_path = scenario_dir / "physics_passes_report.json"
+    # physics_engine_main(
+    #     context=context,
+    #     bands_config=pay_cfg.get("bands_config", {}),
+    #     sensor_constraints=pay_cfg.get("sensor_constraints", {}),
+    #     simulation_start_utc=t0,
+    #     simulation_end_utc=tf,
+    #     output_path=str(physics_report_path),
+    #     step_seconds=20,
+    #     min_duration=collector_kwargs["min_duration"],
+    #     max_duration=collector_kwargs["max_duration"],
+    # )
 
 def main():
     ## TODO Translate pls

@@ -29,8 +29,6 @@ def completo(d: pathlib.Path) -> bool:
     try:
         with (d / "ollama_prompts_combined.json").open("r", encoding="utf-8") as f:
             total = json.load(f).get("scenario_metrics", {}).get("total_tasks_evaluated", 0)
-        with (d / "physics_passes_report.json").open("r", encoding="utf-8") as f:
-            json.load(f)
         return total >= tasks_k
     except (json.JSONDecodeError, OSError):
         return False
@@ -39,7 +37,7 @@ hechos = set()
 while True:
     nuevos = [d for d in pathlib.Path("data").glob("*/*/temp_*/rep_*/scenario_*")
               if d not in hechos and completo(d)]
-    destinos = [pathlib.Path(MAQUINA) / d for d in nuevos]
+    destinos = [pathlib.Path(MAQUINA) / d.relative_to("data") for d in nuevos]
     for d, dest in zip(nuevos, destinos):
         shutil.copytree(d, DATOS / dest, dirs_exist_ok=True,
                         ignore=shutil.ignore_patterns("physics_passes_report.json"))
