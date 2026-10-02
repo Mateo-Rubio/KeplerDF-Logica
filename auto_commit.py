@@ -17,7 +17,10 @@ MAQUINA = f"maquina_{input('Letra de la máquina (escribe solo la letra, ej. a):
 if not (DATOS / MAQUINA).is_dir():
     raise FileNotFoundError(f"No existe la carpeta {DATOS / MAQUINA}. Revisa la letra ingresada.")
 
+TOKEN_LEN = 93
 token = getpass.getpass("Token de GitHub (no se muestra al escribir): ").strip()
+if input(f"Se recibieron {len(token)} caracteres (el token debe tener {TOKEN_LEN}). ¿Continuar? [s/n]: ").strip().lower() != "s":
+    sys.exit(0)
 subprocess.run(["powershell", "-NoProfile", "-Command",
                 "[Windows.ApplicationModel.DataTransfer.Clipboard, Windows.ApplicationModel.DataTransfer, ContentType=WindowsRuntime] | Out-Null; "
                 "[Windows.ApplicationModel.DataTransfer.Clipboard]::ClearHistory() | Out-Null"])
