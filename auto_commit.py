@@ -44,7 +44,8 @@ while True:
     for i in range(0, len(destinos), 100):
         subprocess.run(["git", "add", *map(str, destinos[i:i + 100])], cwd=DATOS)
     if subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=DATOS).returncode:
-        subprocess.run(["git", "commit", "-m", f"{MAQUINA}: {len(nuevos)} escenarios completos"], cwd=DATOS)
+        subprocess.run(["git", "-c", f"user.name={MAQUINA}", "-c", f"user.email={MAQUINA}@keplerdf.local", "commit", "-m", f"{MAQUINA}: {len(nuevos)} escenarios completos"], cwd=DATOS)
+        subprocess.run(["git", "pull", "--rebase"], cwd=DATOS)
         subprocess.run(["git", "push", "origin", "HEAD"], cwd=DATOS)
     hechos.update(nuevos)
     time.sleep(INTERVALO_S)

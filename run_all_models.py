@@ -10,6 +10,7 @@ from src.modules.physics_engine.main import physics_engine_main
 from src.modules.prompt_factory.main import prompt_factory_main
 import types
 from src.modules.data_collector import celestrak_handler
+from src.modules.prompt_factory import generator
 
 DEFAULT_MODELS = [
     "gemma2:27b",
@@ -28,6 +29,20 @@ def _tle_congelados(*args, **kwargs):
 celestrak_handler.requests = types.SimpleNamespace(
     get=_tle_congelados, RequestException=requests.RequestException
 )
+
+_GEO_PATH = pathlib.Path("data/cache/geocode_cache.json")
+_geo = json.loads(_GEO_PATH.read_text(encoding="utf-8")) if _GEO_PATH.exists() else {}
+_geo_original = generator._get_geocoded_info
+
+def _geo_con_cache(lat, lon):
+    clave = f"{lat},{lon}"
+    if clave not in _geo:
+        info = _geo_original(lat, lon)
+        _geo[clave] = info
+        _GEO_PATH.write_text(json.dumps(_geo, ensure_ascii=False), encoding="utf-8")
+    return _geo[clave]
+
+generator._get_geocoded_info = _geo_con_cache
     
 def build_scenario_dir(model: str, strategy: str, temperature: float, rep: int, idx: int) -> pathlib.Path:
     clean = model.replace(":", "_").replace(".", "_")
