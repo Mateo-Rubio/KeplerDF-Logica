@@ -6,9 +6,14 @@ import sys
 import time
 import yaml
 
+## TODO translate pls
 INTERVALO_S = 60
 DATOS = pathlib.Path("../KeplerDF-Datos")
 MAQUINA = f"maquina_{input('Letra de la máquina (escribe solo la letra, ej. a): ').strip().lower()}"
+
+if not (DATOS / MAQUINA).is_dir():
+    raise FileNotFoundError(f"No existe la carpeta {DATOS / MAQUINA}. Revisa la letra ingresada.")
+
 tasks_k = yaml.safe_load(open("config.yaml", encoding="utf-8"))["simulation"]["tasks_k"]
 
 subprocess.run(["git", "fetch", "origin"], cwd=DATOS)
@@ -17,6 +22,7 @@ atras = int(subprocess.run(["git", "rev-list", "--count", "HEAD..@{u}"], cwd=DAT
 if atras > 0:
     if input(f"KeplerDF-Datos está {atras} commits atrás de origin. ¿Quieres continuar? [s/n]: ").strip().lower() != "s":
         sys.exit(0)
+
 
 
 def completo(d: pathlib.Path) -> bool:
